@@ -88,6 +88,14 @@ const createWindow = () => {
       width: 800,
       height: 600,
       webPreferences: {
+
+        // TODO: This allows the preload to access the same window as the
+        // one used in the simulation iframe. Otherwise, it uses a new
+        // window instance without any of the globals defined by the sim.
+        // Electron strongly recommends contextIsolation: true for security
+        // reasons. Come back to this. See
+        // https://www.electronjs.org/docs/latest/tutorial/context-isolation
+        contextIsolation: false,
         preload: path.join(__dirname, 'preload.js')
       }
     })
@@ -96,7 +104,7 @@ const createWindow = () => {
     mainWindow.loadFile('index.html')
   
     // Open the DevTools.
-    // mainWindow.webContents.openDevTools()
+    mainWindow.webContents.openDevTools()
   }
   
   // This method will be called when Electron has finished
