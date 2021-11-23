@@ -41,7 +41,6 @@ SerialPort.list().then(
   ports => ports.forEach( port => {
     console.log( port.manufacturer );
     if ( port.manufacturer && port.manufacturer.includes( 'arduino' ) ) {
-      console.log( port );
       openedPort = new SerialPort( port.path, err => {
           if ( err ) {
             return console.log( 'Error: ', err.message );
