@@ -1,7 +1,8 @@
 {
   "name": "my-electron-app",
   "version": "1.0.0",
-  "description": "",
+  "authors": "Jesse Greenberg, Scott Lambert",
+  "description": "A single app to launch a sim with server to communication with quad device.",
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
