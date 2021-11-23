@@ -37,7 +37,7 @@ const createWindow = () => {
   mainWindow.loadFile( 'index.html' )
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
 
   // Handle messages that we receive from the child process
   serverProcess.on( 'message', message => {
