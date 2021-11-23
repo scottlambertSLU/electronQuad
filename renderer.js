@@ -39,26 +39,26 @@ window.addEventListener( 'message', event => {
     const vertex4 = simFrameWindow.vertex4;
 
     // now that we have references, add listeners to the main process to handle data
-    ipcRenderer.on( 'asynchronous-message', message => {
-      const parsedData = JSON.parse( message );
+    ipcRenderer.on( 'asynchronous-message', (message, data) => {
+      const parsedData = JSON.parse( data );
 
-      const angle1 = pdata.angle1;
-      const angle2 = pdata.angle2;
-      const angle3 = pdata.angle3;
-      const angle4 = pdata.angle4;
+      const angle1 = parsedData.angle1;
+      const angle2 = parsedData.angle2;
+      const angle3 = parsedData.angle3;
+      const angle4 = parsedData.angle4;
 
-      const lengthA = pdata.lengthA;
-      const lengthB = pdata.lengthB;
-      const lengthC = pdata.lengthC;
-      const lengthD = pdata.lengthD;
-
+      const lengthA = parsedData.lengthA;
+      const lengthB = parsedData.lengthB;
+      const lengthC = parsedData.lengthC;
+      const lengthD = parsedData.lengthD;
+      
       console.log( angle1 );
 
-      // if ( simulationModel.isCalibratingProperty.value ) {
-      //   simulationModel.setPhysicalModelBounds( lengthC, lengthB, lengthA, lengthD );
-      // }
-      //
-      // simModel.setPositionsFromLengthAndAngleData( lengthC, lengthB, lengthA, lengthD, angle1, angle4, angle2, angle3 );
+      if ( simulationModel.isCalibratingProperty.value ) {
+        simulationModel.setPhysicalModelBounds( lengthC, lengthB, lengthA, lengthD );
+        }
+      
+        simulationModel.setPositionsFromLengthAndAngleData( lengthC, lengthB, lengthA, lengthD, angle1, angle4, angle2, angle3 );
     } );
   }
 } );

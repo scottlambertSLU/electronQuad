@@ -58,10 +58,13 @@ SerialPort.list().then(
     }
   } ) );
 
+
+const socketClient = ioClient( 'http://localhost:3000' );  
 // The SerialPort uses parser read and then emit formatted data. When we get a 'data' event
 // from the parser, emit that with the websocket so that clients can receive.
 parser.on( 'data', function( data ) {
-  io.emit( 'data', data );
+  //console.log(data);
+  socketClient.emit( 'message', data );
 } );
 
 // on socket.io connection, add listeners to the socket to handle data
@@ -83,8 +86,8 @@ io.on( 'connection', ( socket ) => {
 serverApp.listen( 3000 );
 
 // websocket client - connect
-const socketClient = ioClient( 'http://localhost:3000' );
 socketClient.emit( 'message', 'This is the data' );
+
 
 /**
  * Send a message to the parent Node.js process.
