@@ -17,6 +17,24 @@
 
   <div class="float-child" id="data-container">
     <h1>Connect to device</h1>
+    <label for="devices">Choose a device:</label>
+    <select name="devices" id="devices">
+      <option value="NONE">No device</option>
+      <option value="NONE">None available...</option>
+    </select>
+
+    <div>
+      <div class="dot" id="connection-dot"></div>
+      <span class="statusReadout">Connected to device</span>
+      <br>
+      <div class="dot" id="data-dot"></div>
+      <span class="statusReadout">Receiving quadrilateral data</span>
+      <br>
+      <div class="dot" id="bad-data-dot"></div>
+      <span class="statusReadout">Good data</span>
+
+    </div>
+
   </div>
 </div>
 

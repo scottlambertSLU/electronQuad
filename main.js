@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require( 'electron' );
+const { app, BrowserWindow, ipcMain } = require( 'electron' );
 const path = require( 'path' );
 const ServerMessages = require( './ServerMessages.js' );
 
@@ -37,21 +37,34 @@ const createWindow = () => {
   mainWindow.loadFile( 'index.html' )
 
   // Open the DevTools.
-  // mainWindow.webContents.openDevTools();
+  mainWindow.webContents.openDevTools();
 
   // Handle messages that we receive from the child process
   serverProcess.on( 'message', message => {
     if ( message.messageType === ServerMessages.SOCKET_IO ) {
 
-
       // a socket.io messages was received containing data, send this along to the
       // renderer
-      console.log( 'sending message to the rendderer')
-      mainWindow.webContents.send( 'asynchronous-message', message.messageContent );
+      mainWindow.webContents.send( 'asynchronous-message', message );
+    }
+    else if ( message.messageType === ServerMessages.DEVICES_CHANGED ) {
+      mainWindow.webContents.send( 'asynchronous-message', message );
+    }
+    else if ( message.messageType === ServerMessages.DEVICE_SELECTED ) {
+      mainWindow.webContents.send( 'asynchronous-message', message )
     }
   } );
 
   mainWindow.webContents.send( 'asynchronous-message', 'This is a test message to the renderer process.' );
+
+  // receive messages from child processes
+  ipcMain.on( 'asynchronous-message', ( event, message ) => {
+
+    // received a request to change device, forward this to the server process
+    if ( message.messageType === ServerMessages.DEVICE_SELECTED ) {
+      serverProcess.send( message );
+    }
+  } );
 }
 
 // This method will be called when Electron has finished
