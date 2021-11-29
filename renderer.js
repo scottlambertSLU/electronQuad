@@ -2,10 +2,44 @@ console.log( 'loaded renderer.js' );
 const electron = require( 'electron' );
 const ipcRenderer = require( 'electron' ).ipcRenderer;
 
-// styling for the simulation iframe
+const floatContainerStyle = {
+  width: "100%"
+}
+
+const leftChildStyle = {
+  width: "50%",
+  height: "600px",
+  float: "left",
+  // padding: "20p",
+  // border: "2px solid red",
+};
+
+const rightChildStyle = {
+  marginLeft: "50%",
+  height: "600px"
+}
+
+/**
+ * Apply the styles defined in a styleObject to the provided element. For some reason, inline
+ * CSS is not allowed by electron so we apply it manually in javascript as a workaround.
+ * @param element
+ * @param styleObject
+ */
+const applyStyles = ( element, styleObject ) => {
+  for ( style in styleObject ) {
+    console.log( style)
+    element.style[ style ] = styleObject[ style ];
+  }
+};
+
+let container = document.getElementById( 'float-container' );
 let frame = document.getElementById( "iframe" );
-frame.style.width = '800px';
-frame.style.height = '600px';
+let readout = document.getElementById( 'data-container' );
+let simulationContainer = document.getElementById( 'simulation-container' );
+
+applyStyles( container, floatContainerStyle );
+applyStyles( frame, leftChildStyle );
+applyStyles( readout, rightChildStyle );
 
 // references to the simulation model and other global libraries that will be defined
 // once the iframe and PhET context loads
@@ -39,7 +73,7 @@ window.addEventListener( 'message', event => {
     const vertex4 = simFrameWindow.vertex4;
 
     // now that we have references, add listeners to the main process to handle data
-    ipcRenderer.on( 'asynchronous-message', (message, data) => {
+    ipcRenderer.on( 'asynchronous-message', ( message, data ) => {
       const parsedData = JSON.parse( data );
 
       const angle1 = parsedData.angle1;
@@ -51,14 +85,14 @@ window.addEventListener( 'message', event => {
       const lengthB = parsedData.lengthB;
       const lengthC = parsedData.lengthC;
       const lengthD = parsedData.lengthD;
-      
+
       console.log( angle1 );
 
       if ( simulationModel.isCalibratingProperty.value ) {
         simulationModel.setPhysicalModelBounds( lengthC, lengthB, lengthA, lengthD );
-        }
-      
-        simulationModel.setPositionsFromLengthAndAngleData( lengthC, lengthB, lengthA, lengthD, angle1, angle4, angle2, angle3 );
+      }
+
+      simulationModel.setPositionsFromLengthAndAngleData( lengthC, lengthB, lengthA, lengthD, angle1, angle4, angle2, angle3 );
     } );
   }
 } );

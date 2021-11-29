@@ -14,8 +14,8 @@ const createWindow = () => {
 
   // Create the browser window.
   const mainWindow = new BrowserWindow( {
-    width: 800,
-    height: 600,
+    width: 1020,
+    height: 800,
     webPreferences: {
 
       // TODO: This allows the preload to access the same window as the
