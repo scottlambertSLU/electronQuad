@@ -14,8 +14,6 @@ const createWindow = () => {
 
   // Create the browser window.
   const mainWindow = new BrowserWindow( {
-    width: 1020,
-    height: 800,
     webPreferences: {
 
       // TODO: This allows the preload to access the same window as the
@@ -33,11 +31,14 @@ const createWindow = () => {
     }
   } )
 
+  // Instead of using width, height options to BrowserWindow, make it take the full screen
+  mainWindow.maximize();
+
   // and load the index.html of the app.
   mainWindow.loadFile( 'index.html' )
 
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  // Open the DevTools for debugging
+  // mainWindow.webContents.openDevTools();
 
   // Handle messages that we receive from the child process
   serverProcess.on( 'message', message => {
@@ -65,6 +66,22 @@ const createWindow = () => {
       serverProcess.send( message );
     }
   } );
+
+  // a load (or reload) was detected, we are going to eagerly update the
+  mainWindow.webContents.on( 'did-finish-load', ( e ) => {
+    serverProcess.send( {
+      messageType: ServerMessages.APP_FINISH_LOAD,
+      messageContent: true
+    } );
+  } );
+
+
+  mainWindow.on( 'close', ( e ) => {
+    serverProcess.send( {
+      messageType: ServerMessages.APP_CLOSING,
+      messageContent: true
+    } )
+  } );
 }
 
 // This method will be called when Electron has finished
@@ -80,7 +97,7 @@ app.whenReady().then( () => {
       createWindow()
     }
   } )
-} )
+} );
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits

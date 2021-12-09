@@ -14,7 +14,7 @@ const ServerMessages = require( './ServerMessages.js' );
 const _ = require( 'lodash' );
 
 const parsers = SerialPort.parsers;
-const simulationFile = fs.readFileSync( 'quadrilateral_en_adapted-from-phet.html' );
+const simulationFile = fs.readFileSync( 'quadrilateral_en_phet.html' );
 
 // http server that will both load the simulation html and act as a server for socket.io.
 const serverApp = http.createServer( ( req, res ) => {
@@ -42,25 +42,29 @@ let openedPort = null;
 // devices we will update this list and notify the parent process.
 let devices = [];
 
-// Search the system for new devices at an interval
-setInterval( () => {
+const updatePorts = () => {
   SerialPort.list().then(
-    ports => ports.forEach( port => {
-      if ( !_.isEqual( ports, devices ) ) {
-        devices = ports;
+    ports => {
+      console.log( 'Checking for new list of ports' );
+      ports.forEach( port => {
+        if ( !_.isEqual( ports, devices ) ) {
+          devices = ports;
 
-        // tell the parent process that the list of available devices has changed
-        sendMessageToProcess( ServerMessages.DEVICES_CHANGED, devices );
-      }
-    } ) );
-}, 5000 );
+          // tell the parent process that the list of available devices has changed
+          sendMessageToProcess( ServerMessages.DEVICES_CHANGED, devices );
+        }
+      } )
+    } );
+};
+
+// Search the system for new devices at an interval
+setInterval( updatePorts, 5000 ); // wrapping the Promise in a function here
 
 const socketClient = ioClient( 'http://localhost:3000' );
 
 // The SerialPort uses parser read and then emit formatted data. When we get a 'data' event
 // from the parser, emit that with the websocket so that clients can receive.
 parser.on( 'data', function( data ) {
-  //console.log(data);
   socketClient.emit( 'message', data );
 } );
 
@@ -71,7 +75,7 @@ io.on( 'connection', ( socket ) => {
   socket.on( "message", ( data ) => {
 
     // for debugging, this will print data to the console
-    console.log( data )
+    // console.log( data )
 
     // this will send the data back to the parent process
     // TODO: Do we need this? Could we just send a message to the parent process from parser.on?
@@ -85,8 +89,21 @@ serverApp.listen( 3000 );
 // Listen to messages from the parent process (such as requesting connection to a new device).
 process.on( 'message', message => {
 
-  // connection to a new device has been requested, set up a new SerialPort
-  if ( message.messageType === ServerMessages.DEVICE_SELECTED ) {
+  if ( message.messageType === ServerMessages.APP_FINISH_LOAD ) {
+
+    // app just loaded, either on startup or the first time - do any cleanup
+    // required after a refresh
+
+    openedPort && openedPort.close();
+    openedPort = null;
+    devices = [];
+
+    console.log( 'Updating ports from load, closing any old ones' );
+    updatePorts();
+  }
+  else if ( message.messageType === ServerMessages.DEVICE_SELECTED ) {
+
+    // connection to a new device has been requested, set up a new SerialPort
 
     // close the old connection
     openedPort && openedPort.close();
@@ -125,6 +142,10 @@ process.on( 'message', message => {
     // send a message to the main process that a connection has either been constructed or
     // destroyed
     sendMessageToProcess( ServerMessages.DEVICE_SELECTED, !!openedPort )
+  }
+  else if ( message.messageType === ServerMessages.APP_CLOSING ) {
+    console.log( 'App closing, closing port.' );
+    openedPort && openedPort.close();
   }
 } );
 

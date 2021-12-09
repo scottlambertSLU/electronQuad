@@ -8,13 +8,13 @@ const floatContainerStyle = {
 }
 
 const leftChildStyle = {
-  width: "50%",
+  width: "75%",
   height: "600px",
   float: "left"
 };
 
 const rightChildStyle = {
-  marginLeft: "50%",
+  marginLeft: "25%",
   height: "600px"
 }
 
@@ -94,24 +94,20 @@ window.addEventListener( 'message', event => {
     dot = simFrameWindow.phet.dot;
     simulationModel = simFrameWindow.simModel;
 
-    const vertex1 = simFrameWindow.vertex1;
-    const vertex2 = simFrameWindow.vertex2;
-    const vertex3 = simFrameWindow.vertex3;
-    const vertex4 = simFrameWindow.vertex4;
-
     // now that we have references, add listeners to the main process to handle data
     ipcRenderer.on( 'asynchronous-message', ( message, data ) => {
-      const dataContent = data.messageContent;
+      const dataContent = JSON.parse( data.messageContent );
       const messageType = data.messageType;
 
       let dataList = [];
 
       if ( messageType === ServerMessages.SOCKET_IO ) {
 
-        const angle1 = dataContent.angle1;
-        const angle2 = dataContent.angle2;
-        const angle3 = dataContent.angle3;
-        const angle4 = dataContent.angle4;
+        // angle data, converted to radians
+        const angle1 = dot.Utils.toRadians( dataContent.angle1 );
+        const angle2 = dot.Utils.toRadians( dataContent.angle2 );
+        const angle3 = dot.Utils.toRadians( dataContent.angle3 );
+        const angle4 = dot.Utils.toRadians( dataContent.angle4 );
 
         const lengthA = dataContent.lengthA;
         const lengthB = dataContent.lengthB;
@@ -119,10 +115,13 @@ window.addEventListener( 'message', event => {
         const lengthD = dataContent.lengthD;
 
         if ( simulationModel.isCalibratingProperty.value ) {
-          simulationModel.setPhysicalModelBounds( lengthC, lengthB, lengthA, lengthD );
+
+          // top, right, bottom, left sides
+          simulationModel.setPhysicalModelBounds( lengthD, lengthC, lengthB, lengthA );
         }
 
-        simulationModel.setPositionsFromLengthAndAngleData( lengthC, lengthB, lengthA, lengthD, angle1, angle4, angle2, angle3 );
+        // top, right, bottom, left sides then leftTop, rightTop, rightBottom, leftBottom sides
+        simulationModel.quadrilateralShapeModel.setPositionsFromLengthAndAngleData( lengthD, lengthC, lengthB, lengthA, angle1, angle4, angle3, angle2 );
 
         // if any are null, report that there is potentially bad data being sent to the sim
         // TODO: Could make this better, catching more things
@@ -135,7 +134,7 @@ window.addEventListener( 'message', event => {
       const allDataGood = !_.some( dataList, data => data === null );
 
       dataDotElement.style.backgroundColor = dataReceived ? SUCCESS_COLOR : FAILURE_COLOR;
-      badDataDotElement.style.backgroundColor = ( allDataGood && dataReceived) ? SUCCESS_COLOR : FAILURE_COLOR;
+      badDataDotElement.style.backgroundColor = ( allDataGood && dataReceived ) ? SUCCESS_COLOR : FAILURE_COLOR;
 
     } );
   }
