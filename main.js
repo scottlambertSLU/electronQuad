@@ -2,13 +2,12 @@ const { app, BrowserWindow, ipcMain } = require( 'electron' );
 const path = require( 'path' );
 const ServerMessages = require( './ServerMessages.js' );
 
+// I used to have these in a child process using fork, but I could not get that to work with electron-forge. Instead
+// we are hacking it together with a listener pattern.
+const { sendMessageToServers, addServerMessageListener } = require( './servers.js' );
+
 // Global environment variables that can be used in preload.js
 process.env.SOCKET_PORT = 3000;
-
-// launches the servers in a child process so that we can send messages
-// between main and preload processes
-const { fork } = require( 'child_process' );
-const serverProcess = fork( `${__dirname}/servers.js` );
 
 const createWindow = () => {
 
@@ -41,7 +40,9 @@ const createWindow = () => {
   // mainWindow.webContents.openDevTools();
 
   // Handle messages that we receive from the child process
-  serverProcess.on( 'message', message => {
+  addServerMessageListener( message => {
+
+    console.log( 'receiving message from addServerMessageListener' );
     if ( message.messageType === ServerMessages.SOCKET_IO ) {
 
       // a socket.io messages was received containing data, send this along to the
@@ -63,21 +64,20 @@ const createWindow = () => {
 
     // received a request to change device, forward this to the server process
     if ( message.messageType === ServerMessages.DEVICE_SELECTED ) {
-      serverProcess.send( message );
+      sendMessageToServers( message );
     }
   } );
 
   // a load (or reload) was detected, we are going to eagerly update the
   mainWindow.webContents.on( 'did-finish-load', ( e ) => {
-    serverProcess.send( {
+    sendMessageToServers( {
       messageType: ServerMessages.APP_FINISH_LOAD,
       messageContent: true
     } );
   } );
 
-
   mainWindow.on( 'close', ( e ) => {
-    serverProcess.send( {
+    sendMessageToServers( {
       messageType: ServerMessages.APP_CLOSING,
       messageContent: true
     } )

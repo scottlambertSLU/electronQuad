@@ -179,7 +179,7 @@ ipcRenderer.on( 'asynchronous-message', ( message, data ) => {
 const selectElement = document.getElementById( 'devices' );
 selectElement.addEventListener( 'change', event => {
 
-  const selectedPath = selectElement.options[ selectElement.selectedIndex ].value
+  const selectedPath = selectElement.options[ selectElement.selectedIndex ].value;
   ipcRenderer.send( 'asynchronous-message', {
     messageType: ServerMessages.DEVICE_SELECTED,
     messageContent: selectedPath

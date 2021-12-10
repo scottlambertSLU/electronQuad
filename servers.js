@@ -14,7 +14,7 @@ const ServerMessages = require( './ServerMessages.js' );
 const _ = require( 'lodash' );
 
 const parsers = SerialPort.parsers;
-const simulationFile = fs.readFileSync( 'quadrilateral_en_phet.html' );
+const simulationFile = fs.readFileSync( `${__dirname}/quadrilateral_en_phet.html` );
 
 // http server that will both load the simulation html and act as a server for socket.io.
 const serverApp = http.createServer( ( req, res ) => {
@@ -42,6 +42,29 @@ let openedPort = null;
 // devices we will update this list and notify the parent process.
 let devices = [];
 
+const messageListeners = [];
+
+/**
+ * Adds a listener to be called when the servers.js sends a message to be handled by main.js. I wanted to run
+ * servers.js as a child process but could not get fork to work with electron forge, so we are using this workaround
+ * instead.
+ * @param listener
+ */
+const addServerMessageListener = listener => {
+  messageListeners.push( listener );
+}
+
+/**
+ * Removes a listener that was added by addServerMessageListener.
+ * @param listener
+ */
+const removeServerMessageListener = listener => {
+  const index = messageListeners.indexOf( listener );
+  if ( index >= 0 ) {
+    messageListeners.splice( index, 1 );
+  }
+}
+
 const updatePorts = () => {
   SerialPort.list().then(
     ports => {
@@ -51,7 +74,7 @@ const updatePorts = () => {
           devices = ports;
 
           // tell the parent process that the list of available devices has changed
-          sendMessageToProcess( ServerMessages.DEVICES_CHANGED, devices );
+          sendMessageToMain( ServerMessages.DEVICES_CHANGED, devices );
         }
       } )
     } );
@@ -79,15 +102,18 @@ io.on( 'connection', ( socket ) => {
 
     // this will send the data back to the parent process
     // TODO: Do we need this? Could we just send a message to the parent process from parser.on?
-    sendMessageToProcess( ServerMessages.SOCKET_IO, data );
+    sendMessageToMain( ServerMessages.SOCKET_IO, data );
   } )
 } );
 
 // start listening to the provided port
 serverApp.listen( 3000 );
+console.log( 'server listening' );
 
 // Listen to messages from the parent process (such as requesting connection to a new device).
-process.on( 'message', message => {
+const sendMessageToServers = message => {
+
+  console.log( 'in sendMessageToServers!' );
 
   if ( message.messageType === ServerMessages.APP_FINISH_LOAD ) {
 
@@ -133,7 +159,7 @@ process.on( 'message', message => {
       // TODO: This is untested.
       // TODO: I don't see a way to remove the listeners, hopefully they are removed by SerialPort internals
       const closeCallback = () => {
-        sendMessageToProcess( ServerMessages.DEVICE_SELECTED, false );
+        sendMessageToMain( ServerMessages.DEVICE_SELECTED, false );
       };
       openedPort.on( 'close', closeCallback );
       openedPort.on( 'error', closeCallback );
@@ -141,22 +167,26 @@ process.on( 'message', message => {
 
     // send a message to the main process that a connection has either been constructed or
     // destroyed
-    sendMessageToProcess( ServerMessages.DEVICE_SELECTED, !!openedPort )
+    sendMessageToMain( ServerMessages.DEVICE_SELECTED, !!openedPort )
   }
   else if ( message.messageType === ServerMessages.APP_CLOSING ) {
     console.log( 'App closing, closing port.' );
     openedPort && openedPort.close();
   }
-} );
+};
 
 /**
  * Send a message to the parent Node.js process.
  * @param {string} messageType, determines how the parent process should handle.
  * @param {*} messageContent
  */
-const sendMessageToProcess = ( messageType, messageContent ) => {
-  process.send( {
-    messageType: messageType,
-    messageContent: messageContent
+const sendMessageToMain = ( messageType, messageContent ) => {
+  messageListeners.forEach( listener => {
+    listener( {
+      messageType: messageType,
+      messageContent: messageContent
+    } );
   } );
 };
+
+module.exports = { sendMessageToServers, addServerMessageListener, removeServerMessageListener };
