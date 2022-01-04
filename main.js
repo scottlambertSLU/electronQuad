@@ -102,11 +102,16 @@ app.whenReady().then( () => {
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
-app.on( 'window-all-closed', () => {
-  if ( process.platform !== 'darwin' ) {
-    app.quit()
-  }
-} )
+//
+// This section was added by electron boilerplate. But it is causing crashing issues when connecting to the device
+// after closing while the app stays "active" in the background. Removing this means that closing the window does
+// a hard close on macOS (though apparently that is not conventional).
+//
+// app.on( 'window-all-closed', () => {
+//   if ( process.platform !== 'darwin' ) {
+//     app.quit()
+//   }
+// } )
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
