@@ -16,7 +16,7 @@
 
 
   <div class="float-child" id="data-container">
-    <h1>Connect to device</h1>
+    <h1>Device Connection</h1>
     <label for="devices">Choose a device:</label>
     <select name="devices" id="devices">
       <option value="NONE">No device</option>
@@ -33,6 +33,25 @@
       <div class="dot" id="bad-data-dot"></div>
       <span class="statusReadout">Good data</span>
 
+    </div>
+
+    <h2>Data values</h2>
+    <div>
+      <h3>Side lengths</h3>
+      <ul>
+        <li id="top-side-readout"></li>
+        <li id="right-side-readout"></li>
+        <li id="bottom-side-readout"></li>
+        <li id="left-side-readout"></li>
+      </ul>
+
+      <h3>Angle values (radians)</h3>
+      <ul>
+        <li id="left-top-angle-readout"></li>
+        <li id="right-top-angle-readout"></li>
+        <li id="right-bottom-angle-readout"></li>
+        <li id="left-bottom-angle-readout"></li>
+      </ul>
     </div>
 
   </div>

@@ -33,6 +33,10 @@ const statusReadoutStyle = {
   verticalAlign: 'middle'
 }
 
+const listItemStyle = {
+  listStylePosition: 'inside'
+};
+
 const SUCCESS_COLOR = '#00AB66';
 const FAILURE_COLOR = '#FC100D';
 
@@ -62,7 +66,10 @@ _.forEach( document.getElementsByClassName( 'dot' ), dotElement => {
 
 _.forEach( document.getElementsByClassName( 'statusReadout' ), statusElement => {
   applyStyles( statusElement, statusReadoutStyle );
-  console.log( statusElement );
+} );
+
+_.forEach( document.getElementsByTagName( 'li' ), listItemElement => {
+  applyStyles( listItemElement, listItemStyle );
 } );
 
 // references to the simulation model and other global libraries that will be defined
@@ -93,6 +100,15 @@ window.addEventListener( 'message', event => {
     // the simulation has successfully loaded, we should have access to globals
     dot = simFrameWindow.phet.dot;
     simulationModel = simFrameWindow.simModel;
+
+    /**
+     * Use dot to format a value for easy readout.
+     * @param value
+     * @return {*|string}
+     */
+    const formatValue = value => {
+      return dot.Utils.toFixed( value, 2 );
+    }
 
     // now that we have references, add listeners to the main process to handle data
     ipcRenderer.on( 'asynchronous-message', ( message, data ) => {
@@ -128,6 +144,17 @@ window.addEventListener( 'message', event => {
         dataList = [
           angle1, angle2, angle3, angle4, lengthA, lengthB, lengthC, lengthD
         ]
+
+        // populate the readouts with values for debugging
+        document.getElementById( "top-side-readout" ).innerText = `Top Side: ${formatValue( lengthD )}`;
+        document.getElementById( "right-side-readout" ).innerText = `Right Side: ${formatValue( lengthC )}`;
+        document.getElementById( "bottom-side-readout" ).innerText = `Bottom Side: ${formatValue( lengthB )}`;
+        document.getElementById( "left-side-readout" ).innerText = `Left Side: ${formatValue( lengthA )}`;
+
+        document.getElementById( "left-top-angle-readout" ).innerText = `Left top angle: ${formatValue( angle1 )}`;
+        document.getElementById( "right-top-angle-readout" ).innerText = `Right top angle:${formatValue( angle4 )}`;
+        document.getElementById( "right-bottom-angle-readout" ).innerText = `Right bottom angle: ${formatValue( angle3 )}`;
+        document.getElementById( "left-bottom-angle-readout" ).innerText = `Left bottom angle: ${formatValue( angle2 )}`;
       }
 
       const dataReceived = dataList.length > 0;
