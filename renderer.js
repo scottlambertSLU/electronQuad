@@ -116,6 +116,7 @@ window.addEventListener( 'message', event => {
       const messageType = data.messageType;
 
       let dataList = [];
+      let allDataGood = false;
 
       if ( messageType === ServerMessages.SOCKET_IO ) {
 
@@ -128,22 +129,29 @@ window.addEventListener( 'message', event => {
         const lengthA = dataContent.lengthA;
         const lengthB = dataContent.lengthB;
         const lengthC = dataContent.lengthC;
-        const lengthD = dataContent.lengthD;
-
-        if ( simulationModel.isCalibratingProperty.value ) {
-
-          // top, right, bottom, left sides
-          simulationModel.setPhysicalModelBounds( lengthD, lengthC, lengthB, lengthA );
-        }
-
-        // top, right, bottom, left sides then leftTop, rightTop, rightBottom, leftBottom sides
-        simulationModel.quadrilateralShapeModel.setPositionsFromLengthAndAngleData( lengthD, lengthC, lengthB, lengthA, angle1, angle4, angle3, angle2 );
+        let lengthD = dataContent.lengthD;
 
         // if any are null, report that there is potentially bad data being sent to the sim
-        // TODO: Could make this better, catching more things
         dataList = [
           angle1, angle2, angle3, angle4, lengthA, lengthB, lengthC, lengthD
-        ]
+        ];
+
+        // All data is good if it is defined, non-null, not NaN, and it must be non negative
+        allDataGood = _.every( dataList, data => {
+          return data !== null && data !== undefined && data >= 0 && !isNaN( data );
+        } );
+        console.log( allDataGood );
+
+        if ( allDataGood ) {
+          if ( simulationModel.isCalibratingProperty.value ) {
+
+            // top, right, bottom, left sides
+            simulationModel.setPhysicalModelBounds( lengthD, lengthC, lengthB, lengthA );
+          }
+
+          // top, right, bottom, left sides then leftTop, rightTop, rightBottom, leftBottom sides
+          simulationModel.quadrilateralShapeModel.setPositionsFromLengthAndAngleData( lengthD, lengthC, lengthB, lengthA, angle1, angle4, angle3, angle2 );
+        }
 
         // populate the readouts with values for debugging
         document.getElementById( "top-side-readout" ).innerText = `Top Side: ${formatValue( lengthD )}`;
@@ -158,7 +166,6 @@ window.addEventListener( 'message', event => {
       }
 
       const dataReceived = dataList.length > 0;
-      const allDataGood = !_.some( dataList, data => data === null );
 
       dataDotElement.style.backgroundColor = dataReceived ? SUCCESS_COLOR : FAILURE_COLOR;
       badDataDotElement.style.backgroundColor = ( allDataGood && dataReceived ) ? SUCCESS_COLOR : FAILURE_COLOR;
