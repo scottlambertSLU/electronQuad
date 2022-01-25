@@ -37,6 +37,7 @@ const listItemStyle = {
   listStylePosition: 'inside'
 };
 
+const SUCCESS_TEXT_COLOR = 'black';
 const SUCCESS_COLOR = '#00AB66';
 const FAILURE_COLOR = '#FC100D';
 
@@ -151,24 +152,29 @@ window.addEventListener( 'message', event => {
 
           // top, right, bottom, left sides then leftTop, rightTop, rightBottom, leftBottom sides
           simulationModel.quadrilateralShapeModel.setPositionsFromLengthAndAngleData( lengthD, lengthC, lengthB, lengthA, angle1, angle4, angle3, angle2 );
+
+          // populate the readouts with values for debugging - only do this if the data is good, we don't want
+          // to write "NaN" or something because we want to see the previous value
+          document.getElementById( "top-side-readout" ).innerText = `Top Side: ${formatValue( lengthD )}`;
+          document.getElementById( "right-side-readout" ).innerText = `Right Side: ${formatValue( lengthC )}`;
+          document.getElementById( "bottom-side-readout" ).innerText = `Bottom Side: ${formatValue( lengthB )}`;
+          document.getElementById( "left-side-readout" ).innerText = `Left Side: ${formatValue( lengthA )}`;
+
+          document.getElementById( "left-top-angle-readout" ).innerText = `Left top angle: ${formatValue( angle1 )}`;
+          document.getElementById( "right-top-angle-readout" ).innerText = `Right top angle:${formatValue( angle4 )}`;
+          document.getElementById( "right-bottom-angle-readout" ).innerText = `Right bottom angle: ${formatValue( angle3 )}`;
+          document.getElementById( "left-bottom-angle-readout" ).innerText = `Left bottom angle: ${formatValue( angle2 )}`;
         }
-
-        // populate the readouts with values for debugging
-        document.getElementById( "top-side-readout" ).innerText = `Top Side: ${formatValue( lengthD )}`;
-        document.getElementById( "right-side-readout" ).innerText = `Right Side: ${formatValue( lengthC )}`;
-        document.getElementById( "bottom-side-readout" ).innerText = `Bottom Side: ${formatValue( lengthB )}`;
-        document.getElementById( "left-side-readout" ).innerText = `Left Side: ${formatValue( lengthA )}`;
-
-        document.getElementById( "left-top-angle-readout" ).innerText = `Left top angle: ${formatValue( angle1 )}`;
-        document.getElementById( "right-top-angle-readout" ).innerText = `Right top angle:${formatValue( angle4 )}`;
-        document.getElementById( "right-bottom-angle-readout" ).innerText = `Right bottom angle: ${formatValue( angle3 )}`;
-        document.getElementById( "left-bottom-angle-readout" ).innerText = `Left bottom angle: ${formatValue( angle2 )}`;
       }
 
       const dataReceived = dataList.length > 0;
+      const isDataGood = ( allDataGood && dataReceived );
 
       dataDotElement.style.backgroundColor = dataReceived ? SUCCESS_COLOR : FAILURE_COLOR;
-      badDataDotElement.style.backgroundColor = ( allDataGood && dataReceived ) ? SUCCESS_COLOR : FAILURE_COLOR;
+      badDataDotElement.style.backgroundColor = isDataGood ? SUCCESS_COLOR : FAILURE_COLOR;
+
+      document.getElementById( "length-readout-list" ).style.color = isDataGood ? SUCCESS_TEXT_COLOR : FAILURE_COLOR;
+      document.getElementById( "angle-readout-list" ).style.color = isDataGood ? SUCCESS_TEXT_COLOR : FAILURE_COLOR;
 
     } );
   }
