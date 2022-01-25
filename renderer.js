@@ -177,6 +177,15 @@ window.addEventListener( 'message', event => {
       document.getElementById( "angle-readout-list" ).style.color = isDataGood ? SUCCESS_TEXT_COLOR : FAILURE_COLOR;
 
     } );
+
+    // Other misc sim controls
+
+    // When the debug-values-checkbox is clicked, let the simulation know that the panel should
+    // be displayed
+    const debugValuesCheckbox = document.getElementById( 'debug-values-checkbox' );
+    debugValuesCheckbox.addEventListener( 'click', () => {
+      simulationModel.showDebugValuesProperty.value = debugValuesCheckbox.checked;
+    } );
   }
 } );
 
