@@ -41,10 +41,7 @@ const createWindow = () => {
 
   // Handle messages that we receive from the child process
   addServerMessageListener( message => {
-
-    console.log( 'receiving message from addServerMessageListener' );
     if ( message.messageType === ServerMessages.SOCKET_IO ) {
-      console.log( 'socket message' );
 
       // a socket.io messages was received containing data, send this along to the
       // renderer

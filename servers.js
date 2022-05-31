@@ -105,21 +105,21 @@ io.on( 'connection', ( socket ) => {
     sendMessageToMain( ServerMessages.SOCKET_IO, data );
   } )
 
-
-  // Testing code, sending data at an interval because we cannot connect to a device
-  setInterval( () => {
-    sendMessageToMain( ServerMessages.SOCKET_IO, JSON.stringify( {
-      angle1: 90,
-      angle2: 90,
-      angle3: 90,
-      angle4: 90,
-
-      lengthA: 25,
-      lengthB: 25,
-      lengthC: 25,
-      lengthD: 25
-    } ) );
-  }, 2000 );
+  //
+  // // Testing code, sending data at an interval because we cannot connect to a device
+  // setInterval( () => {
+  //   sendMessageToMain( ServerMessages.SOCKET_IO, JSON.stringify( {
+  //     angle1: 90,
+  //     angle2: 90,
+  //     angle3: 90,
+  //     angle4: 90,
+  //
+  //     lengthA: 25,
+  //     lengthB: 25,
+  //     lengthC: 25,
+  //     lengthD: 25
+  //   } ) );
+  // }, 2000 );
 } );
 
 // start listening to the provided port
