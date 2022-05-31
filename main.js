@@ -28,7 +28,7 @@ const createWindow = () => {
       nodeIntegration: true,
       preload: path.join( __dirname, 'preload.js' )
     }
-  } )
+  } );
 
   // Instead of using width, height options to BrowserWindow, make it take the full screen
   mainWindow.maximize();
@@ -37,13 +37,14 @@ const createWindow = () => {
   mainWindow.loadFile( 'index.html' )
 
   // Open the DevTools for debugging
-  // mainWindow.webContents.openDevTools();
+  mainWindow.webContents.openDevTools();
 
   // Handle messages that we receive from the child process
   addServerMessageListener( message => {
 
     console.log( 'receiving message from addServerMessageListener' );
     if ( message.messageType === ServerMessages.SOCKET_IO ) {
+      console.log( 'socket message' );
 
       // a socket.io messages was received containing data, send this along to the
       // renderer
@@ -83,6 +84,18 @@ const createWindow = () => {
     } )
   } );
 }
+
+// allow going through https to phet-dev
+app.commandLine.appendSwitch( 'disable-site-isolation-trials' )
+
+// This is how Electron will process the login request from PhET's servers for login credentials.
+app.on( "login", ( event, webContents, request, authInfo, callback ) => {
+  event.preventDefault();
+
+  // No good - would be best to have a our own credentials dialog to enter this but I ran out of steam
+  // trying to get that to work. See https://stackoverflow.com/questions/43311513/whats-the-proper-way-to-handle-forms-in-electron
+  callback( 'phet', 'chime7' );
+} );
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.

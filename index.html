@@ -3,17 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://phet-dev.colorado.edu; script-src 'self'">
   <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'">
   <title>Hello World!</title>
 </head>
 <body>
 <div id="float-container">
   <div class="float-child" id="simulation-container">
-    <iframe class="simulation" id="iframe" allowfullscreen scrolling="no" title="Testing connection stuff"
-            src="quadrilateral_en_phet.html?postMessageOnLoad&postMessageOnError&showPointerAreas&deviceConnection&markerInput"></iframe>
+    <iframe class="simulation" id="iframe" allowfullscreen scrolling="no" title="Testing connection stuff"></iframe>
   </div>
-
 
   <div class="float-child" id="data-container">
     <h1>Device Connection</h1>

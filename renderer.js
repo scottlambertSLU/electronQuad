@@ -3,6 +3,9 @@ const ipcRenderer = require( 'electron' ).ipcRenderer;
 const ServerMessages = require( './ServerMessages.js' );
 const _ = require( 'lodash' );
 
+// Set to true to point the simulation to the phet-io metacog wrapper
+const DATA_COLLECTION = true;
+
 const floatContainerStyle = {
   width: "100%"
 }
@@ -57,6 +60,24 @@ let container = document.getElementById( 'float-container' );
 let frame = document.getElementById( "iframe" );
 let readout = document.getElementById( 'data-container' );
 
+const defaultConnectionQueries = 'postMessageOnLoad&postMessageOnError&deviceConnection&markerInput';
+const defaultModelQueries = 'deviceShapeAngleToleranceInterval=0.05&deviceShapeLengthToleranceInterval=0.03&toleranceIntervalScaleFactor=10';
+
+let phetioQueries;
+
+let simulationSource;
+if ( DATA_COLLECTION ) {
+  simulationSource = 'https://phet-dev.colorado.edu/html/quadrilateral/1.0.0-dev.35/phet-io/wrappers/login/'; // metacog wrapper
+  phetioQueries = 'numberOfDigits=4&wrapper=record&validationRule=validateDigits&metacog&publisher_id=5d4c8ae1&key_name=phet-quad-study_2022_q3&widget_id=phet-quad-study_2022_q3-test&phetioEmitStates=true&phetioEmitStatesInterval=60';
+}
+else {
+  simulationSource = 'quadrilateral_en_phet.html';
+  phetioQueries = '';
+}
+
+// Set to the simulation
+frame.src = `${simulationSource}?${defaultConnectionQueries}&${defaultModelQueries}&${phetioQueries}`;
+
 applyStyles( container, floatContainerStyle );
 applyStyles( frame, leftChildStyle );
 applyStyles( readout, rightChildStyle );
@@ -81,111 +102,141 @@ let simulationModel;
 const badDataDotElement = document.getElementById( 'bad-data-dot' );
 const dataDotElement = document.getElementById( 'data-dot' );
 
-window.addEventListener( 'message', event => {
-  if ( !event.data ) {
-    return;
-  }
-
-  let data;
-  try {
-    data = JSON.parse( event.data );
-  }
-  catch( e ) {
-    return;
-  }
-
-  if ( data.type === 'load' ) {
-
-    const simFrameWindow = document.getElementById( "iframe" ).contentWindow;
-
-    // the simulation has successfully loaded, we should have access to globals
-    dot = simFrameWindow.phet.dot;
-    simulationModel = simFrameWindow.simModel;
-
-    /**
-     * Use dot to format a value for easy readout.
-     * @param value
-     * @return {*|string}
-     */
-    const formatValue = value => {
-      return dot.Utils.toFixed( value, 2 );
+const addReadyListenerToParentWindow = ( parentWindow, simFrameWindow ) => {
+  parentWindow.addEventListener( 'message', event => {
+    if ( !event.data ) {
+      return;
     }
 
-    // now that we have references, add listeners to the main process to handle data
-    ipcRenderer.on( 'asynchronous-message', ( message, data ) => {
-      const dataContent = JSON.parse( data.messageContent );
-      const messageType = data.messageType;
+    let data;
+    try {
+      data = JSON.parse( event.data );
+    }
+    catch( e ) {
+      return;
+    }
 
-      let dataList = [];
-      let allDataGood = false;
+    if ( data.type === 'load' ) {
 
-      if ( messageType === ServerMessages.SOCKET_IO ) {
+      // the simulation has successfully loaded, we should have access to globals
+      dot = simFrameWindow.phet.dot;
+      simulationModel = simFrameWindow.simModel;
 
-        // angle data, converted to radians
-        const angle1 = dot.Utils.toRadians( dataContent.angle1 );
-        const angle2 = dot.Utils.toRadians( dataContent.angle2 );
-        const angle3 = dot.Utils.toRadians( dataContent.angle3 );
-        const angle4 = dot.Utils.toRadians( dataContent.angle4 );
-
-        const lengthA = dataContent.lengthA;
-        const lengthB = dataContent.lengthB;
-        const lengthC = dataContent.lengthC;
-        let lengthD = dataContent.lengthD;
-
-        // if any are null, report that there is potentially bad data being sent to the sim
-        dataList = [
-          angle1, angle2, angle3, angle4, lengthA, lengthB, lengthC, lengthD
-        ];
-
-        // All data is good if it is defined, non-null, not NaN, and it must be non negative
-        allDataGood = _.every( dataList, data => {
-          return data !== null && data !== undefined && data >= 0 && !isNaN( data );
-        } );
-        console.log( allDataGood );
-
-        if ( allDataGood ) {
-          if ( simulationModel.isCalibratingProperty.value ) {
-
-            // top, right, bottom, left sides
-            simulationModel.setPhysicalModelBounds( lengthD, lengthC, lengthB, lengthA );
-          }
-
-          // top, right, bottom, left sides then leftTop, rightTop, rightBottom, leftBottom sides
-          simulationModel.quadrilateralShapeModel.setPositionsFromLengthAndAngleData( lengthD, lengthC, lengthB, lengthA, angle1, angle4, angle3, angle2 );
-
-          // populate the readouts with values for debugging - only do this if the data is good, we don't want
-          // to write "NaN" or something because we want to see the previous value
-          document.getElementById( "top-side-readout" ).innerText = `Top Side: ${formatValue( lengthD )}`;
-          document.getElementById( "right-side-readout" ).innerText = `Right Side: ${formatValue( lengthC )}`;
-          document.getElementById( "bottom-side-readout" ).innerText = `Bottom Side: ${formatValue( lengthB )}`;
-          document.getElementById( "left-side-readout" ).innerText = `Left Side: ${formatValue( lengthA )}`;
-
-          document.getElementById( "left-top-angle-readout" ).innerText = `Left top angle: ${formatValue( angle1 )}`;
-          document.getElementById( "right-top-angle-readout" ).innerText = `Right top angle:${formatValue( angle4 )}`;
-          document.getElementById( "right-bottom-angle-readout" ).innerText = `Right bottom angle: ${formatValue( angle3 )}`;
-          document.getElementById( "left-bottom-angle-readout" ).innerText = `Left bottom angle: ${formatValue( angle2 )}`;
-        }
+      /**
+       * Use dot to format a value for easy readout.
+       * @param value
+       * @return {*|string}
+       */
+      const formatValue = value => {
+        return dot.Utils.toFixed( value, 2 );
       }
 
-      const dataReceived = dataList.length > 0;
-      const isDataGood = ( allDataGood && dataReceived );
+      // now that we have references, add listeners to the main process to handle data
+      ipcRenderer.on( 'asynchronous-message', ( message, data ) => {
+        const dataContent = JSON.parse( data.messageContent );
+        const messageType = data.messageType;
 
-      dataDotElement.style.backgroundColor = dataReceived ? SUCCESS_COLOR : FAILURE_COLOR;
-      badDataDotElement.style.backgroundColor = isDataGood ? SUCCESS_COLOR : FAILURE_COLOR;
+        let dataList = [];
+        let allDataGood = false;
 
-      document.getElementById( "length-readout-list" ).style.color = isDataGood ? SUCCESS_TEXT_COLOR : FAILURE_COLOR;
-      document.getElementById( "angle-readout-list" ).style.color = isDataGood ? SUCCESS_TEXT_COLOR : FAILURE_COLOR;
+        if ( messageType === ServerMessages.SOCKET_IO ) {
 
-    } );
+          // angle data, converted to radians
+          const angle1 = dot.Utils.toRadians( dataContent.angle1 );
+          const angle2 = dot.Utils.toRadians( dataContent.angle2 );
+          const angle3 = dot.Utils.toRadians( dataContent.angle3 );
+          const angle4 = dot.Utils.toRadians( dataContent.angle4 );
 
-    // Other misc sim controls
+          const lengthA = dataContent.lengthA;
+          const lengthB = dataContent.lengthB;
+          const lengthC = dataContent.lengthC;
+          let lengthD = dataContent.lengthD;
 
-    // When the debug-values-checkbox is clicked, let the simulation know that the panel should
-    // be displayed
-    const debugValuesCheckbox = document.getElementById( 'debug-values-checkbox' );
-    debugValuesCheckbox.addEventListener( 'click', () => {
-      simulationModel.showDebugValuesProperty.value = debugValuesCheckbox.checked;
-    } );
+          // if any are null, report that there is potentially bad data being sent to the sim
+          dataList = [
+            angle1, angle2, angle3, angle4, lengthA, lengthB, lengthC, lengthD
+          ];
+
+          // All data is good if it is defined, non-null, not NaN, and it must be non negative
+          allDataGood = _.every( dataList, data => {
+            return data !== null && data !== undefined && data >= 0 && !isNaN( data );
+          } );
+          console.log( allDataGood );
+
+          if ( allDataGood ) {
+            if ( simulationModel.isCalibratingProperty.value ) {
+
+              // top, right, bottom, left sides
+              simulationModel.setPhysicalModelBounds( lengthD, lengthC, lengthB, lengthA );
+            }
+
+            // top, right, bottom, left sides then leftTop, rightTop, rightBottom, leftBottom sides
+            simulationModel.quadrilateralShapeModel.setPositionsFromLengthAndAngleData( lengthD, lengthC, lengthB, lengthA, angle1, angle4, angle3, angle2 );
+
+            // populate the readouts with values for debugging - only do this if the data is good, we don't want
+            // to write "NaN" or something because we want to see the previous value
+            document.getElementById( "top-side-readout" ).innerText = `Top Side: ${formatValue( lengthD )}`;
+            document.getElementById( "right-side-readout" ).innerText = `Right Side: ${formatValue( lengthC )}`;
+            document.getElementById( "bottom-side-readout" ).innerText = `Bottom Side: ${formatValue( lengthB )}`;
+            document.getElementById( "left-side-readout" ).innerText = `Left Side: ${formatValue( lengthA )}`;
+
+            document.getElementById( "left-top-angle-readout" ).innerText = `Left top angle: ${formatValue( angle1 )}`;
+            document.getElementById( "right-top-angle-readout" ).innerText = `Right top angle:${formatValue( angle4 )}`;
+            document.getElementById( "right-bottom-angle-readout" ).innerText = `Right bottom angle: ${formatValue( angle3 )}`;
+            document.getElementById( "left-bottom-angle-readout" ).innerText = `Left bottom angle: ${formatValue( angle2 )}`;
+          }
+        }
+
+        const dataReceived = dataList.length > 0;
+        const isDataGood = ( allDataGood && dataReceived );
+
+        dataDotElement.style.backgroundColor = dataReceived ? SUCCESS_COLOR : FAILURE_COLOR;
+        badDataDotElement.style.backgroundColor = isDataGood ? SUCCESS_COLOR : FAILURE_COLOR;
+
+        document.getElementById( "length-readout-list" ).style.color = isDataGood ? SUCCESS_TEXT_COLOR : FAILURE_COLOR;
+        document.getElementById( "angle-readout-list" ).style.color = isDataGood ? SUCCESS_TEXT_COLOR : FAILURE_COLOR;
+
+      } );
+
+      // Other misc sim controls
+
+      // When the debug-values-checkbox is clicked, let the simulation know that the panel should
+      // be displayed
+      const debugValuesCheckbox = document.getElementById( 'debug-values-checkbox' );
+      debugValuesCheckbox.addEventListener( 'click', () => {
+        simulationModel.showDebugValuesProperty.value = debugValuesCheckbox.checked;
+      } );
+    }
+  } )
+};
+
+let parentWindow;
+let simFrameWindow;
+
+const simulationFrameElement = document.getElementById( "iframe" );
+simulationFrameElement.addEventListener( 'load', event => {
+  if ( simulationFrameElement.contentWindow.phet ) {
+
+    // the iframe has a phet object - must be phet brand where the sim is the iframe document
+    // so the the phet object is on that window and the load message goes to this window
+    parentWindow = window;
+    simFrameWindow = document.getElementById( "iframe" ).contentWindow;
+
+    addReadyListenerToParentWindow( parentWindow, simFrameWindow );
+  }
+  else {
+    parentWindow = simulationFrameElement.contentWindow;
+
+    // For some reason the 'load' event isn't firing on the simulationElement or its window so we are going to poll
+    // and wait for the element to be ready to add listeners to
+    const interval = setInterval( () => {
+      const simulationElement = document.getElementById( 'iframe' ).contentWindow.document.getElementById( 'sim' );
+      if ( simulationElement ) {
+        simFrameWindow = simulationElement.contentWindow;
+        addReadyListenerToParentWindow( simulationFrameElement.contentWindow, simFrameWindow );
+        clearInterval( interval );
+      }
+    }, 2000 );
   }
 } );
 
