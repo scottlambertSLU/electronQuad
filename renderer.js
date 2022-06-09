@@ -67,7 +67,7 @@ let phetioQueries;
 
 let simulationSource;
 if ( DATA_COLLECTION ) {
-  simulationSource = 'https://phet-dev.colorado.edu/html/quadrilateral/1.0.0-dev.35/phet-io/wrappers/login/'; // metacog wrapper
+  simulationSource = 'https://phet-dev.colorado.edu/html/quadrilateral/1.0.0-dev.36/phet-io/wrappers/login/'; // metacog wrapper
   phetioQueries = 'numberOfDigits=4&wrapper=record&validationRule=validateDigits&metacog&publisher_id=5d4c8ae1&key_name=phet-quad-study_2022_q3&widget_id=phet-quad-study_2022_q3-test&phetioEmitStates=true&phetioEmitStatesInterval=60';
 }
 else {
@@ -141,6 +141,7 @@ const addReadyListenerToParentWindow = ( parentWindow, simFrameWindow ) => {
 
         if ( messageType === ServerMessages.SOCKET_IO ) {
 
+
           // angle data, converted to radians
           const angle1 = dot.Utils.toRadians( dataContent.angle1 );
           const angle2 = dot.Utils.toRadians( dataContent.angle2 );
@@ -167,23 +168,36 @@ const addReadyListenerToParentWindow = ( parentWindow, simFrameWindow ) => {
             if ( simulationModel.isCalibratingProperty.value ) {
 
               // top, right, bottom, left sides
-              simulationModel.setPhysicalModelBounds( lengthD, lengthC, lengthB, lengthA );
+              simulationModel.setPhysicalModelBounds( lengthA, lengthB, lengthC, lengthD );
             }
 
+            // bottom left angle, clockwise
+            // toplength, clockwise
+
+            // angle1 -> bottom left
+            // angle2 -> top left
+            // angle3 -> top right
+            // angle4 -> bottom right
+            //
+            // lengthA -> top
+            // lengthB -> right
+            // lengthC -> bottom
+            // lengthD -> left
+
             // top, right, bottom, left sides then leftTop, rightTop, rightBottom, leftBottom sides
-            simulationModel.quadrilateralShapeModel.setPositionsFromLengthAndAngleData( lengthD, lengthC, lengthB, lengthA, angle1, angle4, angle3, angle2 );
+            simulationModel.quadrilateralShapeModel.setPositionsFromLengthAndAngleData( lengthA, lengthB, lengthC, lengthD, angle2, angle3, angle4, angle1 );
 
             // populate the readouts with values for debugging - only do this if the data is good, we don't want
             // to write "NaN" or something because we want to see the previous value
-            document.getElementById( "top-side-readout" ).innerText = `Top Side: ${formatValue( lengthD )}`;
-            document.getElementById( "right-side-readout" ).innerText = `Right Side: ${formatValue( lengthC )}`;
-            document.getElementById( "bottom-side-readout" ).innerText = `Bottom Side: ${formatValue( lengthB )}`;
-            document.getElementById( "left-side-readout" ).innerText = `Left Side: ${formatValue( lengthA )}`;
+            document.getElementById( "top-side-readout" ).innerText = `Top Side: ${formatValue( lengthA )}`;
+            document.getElementById( "right-side-readout" ).innerText = `Right Side: ${formatValue( lengthB )}`;
+            document.getElementById( "bottom-side-readout" ).innerText = `Bottom Side: ${formatValue( lengthC )}`;
+            document.getElementById( "left-side-readout" ).innerText = `Left Side: ${formatValue( lengthD )}`;
 
-            document.getElementById( "left-top-angle-readout" ).innerText = `Left top angle: ${formatValue( angle1 )}`;
-            document.getElementById( "right-top-angle-readout" ).innerText = `Right top angle:${formatValue( angle4 )}`;
-            document.getElementById( "right-bottom-angle-readout" ).innerText = `Right bottom angle: ${formatValue( angle3 )}`;
-            document.getElementById( "left-bottom-angle-readout" ).innerText = `Left bottom angle: ${formatValue( angle2 )}`;
+            document.getElementById( "left-top-angle-readout" ).innerText = `Left top angle: ${formatValue( angle2 )}`;
+            document.getElementById( "right-top-angle-readout" ).innerText = `Right top angle:${formatValue( angle3 )}`;
+            document.getElementById( "right-bottom-angle-readout" ).innerText = `Right bottom angle: ${formatValue( angle4 )}`;
+            document.getElementById( "left-bottom-angle-readout" ).innerText = `Left bottom angle: ${formatValue( angle1 )}`;
           }
         }
 
