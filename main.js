@@ -37,7 +37,7 @@ const createWindow = () => {
   mainWindow.loadFile( 'index.html' )
 
   // Open the DevTools for debugging
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
 
   // Handle messages that we receive from the child process
   addServerMessageListener( message => {
@@ -92,16 +92,16 @@ app.on( "login", ( event, webContents, request, authInfo, callback ) => {
   // Credentials for PhET-iO, empty but must be filled in manually. Ideally we could develop an AI to enter
   // credentials, but I spent some time trying to figure out how to do that and ran out of steam. See
   // https://stackoverflow.com/questions/43311513/whats-the-proper-way-to-handle-forms-in-electron for guidance.
-  const phetUsername = null;
-  const phetPassword = null;
-  throw new Error( 'Please fill in credentials in the code directly.' );
+  const phetUsername = 'phet';
+  const phetPassword = 'chime7';
+  // throw new Error( 'Please fill in credentials in the code directly.' );
 
 
   // No good - would be best to have a credentials UI in Electron to enter this but I ran out of steam
   // trying to get that to work. See
   // https://stackoverflow.com/questions/43311513/whats-the-proper-way-to-handle-forms-in-electron
   // for guidance to pick that up again
-  // callback( phetUsername, phetPassword );
+  callback( phetUsername, phetPassword );
 } );
 
 // This method will be called when Electron has finished
