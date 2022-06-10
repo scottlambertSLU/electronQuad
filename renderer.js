@@ -67,8 +67,8 @@ let phetioQueries;
 
 let simulationSource;
 if ( DATA_COLLECTION ) {
-  simulationSource = 'https://phet-dev.colorado.edu/html/quadrilateral/1.0.0-dev.36/phet-io/wrappers/login/'; // metacog wrapper
-  phetioQueries = 'numberOfDigits=4&wrapper=record&validationRule=validateDigits&metacog&publisher_id=5d4c8ae1&key_name=phet-quad-study_2022_q3&widget_id=phet-quad-study_2022_q3-test&phetioEmitStates=true&phetioEmitStatesInterval=60';
+  simulationSource = 'https://phet-dev.colorado.edu/html/quadrilateral/1.0.0-dev.37/phet-io/wrappers/login/'; // metacog wrapper
+  phetioQueries = 'numberOfDigits=4&wrapper=record&validationRule=validateDigits&metacog&publisher_id=5d4c8ae1&key_name=phet-quad-study_2022_q3&widget_id=phet-quad-study_2022_q3&phetioEmitStates=true&phetioEmitStatesInterval=60';
 }
 else {
   simulationSource = 'quadrilateral_en_phet.html';
