@@ -122,6 +122,9 @@ const addReadyListenerToParentWindow = ( parentWindow, simFrameWindow ) => {
       dot = simFrameWindow.phet.dot;
       simulationModel = simFrameWindow.simModel;
 
+      // Signify (mostly to the data stream) that we are connected to a tangible device.
+      simulationModel.connectedToDeviceProperty.value = true;
+
       /**
        * Use dot to format a value for easy readout.
        * @param value
